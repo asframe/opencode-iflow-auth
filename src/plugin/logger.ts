@@ -8,7 +8,7 @@ const getLogDir = () => {
     platform === 'win32'
       ? join(process.env.APPDATA || join(homedir(), 'AppData', 'Roaming'), 'opencode')
       : join(process.env.XDG_CONFIG_HOME || join(homedir(), '.config'), 'opencode')
-  return join(base, 'kiro-logs')
+  return join(base, 'iflow-logs')
 }
 
 const writeToFile = (level: string, message: string, ...args: unknown[]) => {
