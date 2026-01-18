@@ -43,14 +43,29 @@ export function isThinkingModel(model: string): boolean {
 }
 
 export function applyThinkingConfig(body: any, model: string): any {
+  const thinkingBudget = body.providerOptions?.thinkingConfig?.thinkingBudget
+
   if (model.startsWith('glm-4')) {
-    return {
+    const result: any = {
       ...body,
       chat_template_kwargs: {
         enable_thinking: true,
         clear_thinking: false
       }
     }
+    if (thinkingBudget) {
+      result.thinking_budget = thinkingBudget
+    }
+    return result
   }
+
+  if (model.startsWith('deepseek-r1')) {
+    const result: any = { ...body }
+    if (thinkingBudget) {
+      result.thinking_budget = thinkingBudget
+    }
+    return result
+  }
+
   return body
 }

@@ -62,7 +62,12 @@ Add the plugin to your `opencode.json` or `opencode.jsonc`:
         "glm-4.6": {
           "name": "GLM-4.6 Thinking",
           "limit": { "context": 200000, "output": 128000 },
-          "modalities": { "input": ["text", "image"], "output": ["text"] }
+          "modalities": { "input": ["text", "image"], "output": ["text"] },
+          "variants": {
+            "low": { "thinkingConfig": { "thinkingBudget": 1024 } },
+            "medium": { "thinkingConfig": { "thinkingBudget": 8192 } },
+            "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
+          }
         },
         "deepseek-v3": {
           "name": "DeepSeek V3",
@@ -77,7 +82,12 @@ Add the plugin to your `opencode.json` or `opencode.jsonc`:
         "deepseek-r1": {
           "name": "DeepSeek R1",
           "limit": { "context": 128000, "output": 32000 },
-          "modalities": { "input": ["text"], "output": ["text"] }
+          "modalities": { "input": ["text"], "output": ["text"] },
+          "variants": {
+            "low": { "thinkingConfig": { "thinkingBudget": 1024 } },
+            "medium": { "thinkingConfig": { "thinkingBudget": 8192 } },
+            "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
+          }
         },
         "qwen3-32b": {
           "name": "Qwen3 32B",
@@ -149,14 +159,67 @@ All configuration options can be overridden via environment variables:
 
 ## Thinking Models
 
-GLM-4.x models automatically enable thinking mode with special configuration:
+iFlow supports thinking models with customizable thinking budgets via variants:
+
+### GLM-4.6
+
+Automatically enables thinking mode with configurable budget:
+
+```json
+{
+  "variants": {
+    "low": { "thinkingConfig": { "thinkingBudget": 1024 } },
+    "medium": { "thinkingConfig": { "thinkingBudget": 8192 } },
+    "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
+  }
+}
+```
+
+The plugin automatically transforms requests to:
 
 ```typescript
-// GLM-4.6 automatically add:
 {
   "chat_template_kwargs": {
     "enable_thinking": true,
     "clear_thinking": false
+  },
+  "thinking_budget": 8192  // from variant config
+}
+```
+
+### DeepSeek R1
+
+Supports thinking budget control via variants:
+
+```json
+{
+  "variants": {
+    "low": { "thinkingConfig": { "thinkingBudget": 1024 } },
+    "medium": { "thinkingConfig": { "thinkingBudget": 8192 } },
+    "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
+  }
+}
+```
+
+The plugin automatically adds `thinking_budget` parameter to requests.
+
+### Response Format
+
+Both models return reasoning content in the response:
+
+```json
+{
+  "choices": [{
+    "message": {
+      "role": "assistant",
+      "content": "The answer is 4.",
+      "reasoning_content": "Let me think step by step..."
+    }
+  }],
+  "usage": {
+    "completion_tokens_details": {
+      "reasoning_tokens": 1094
+    }
   }
 }
 ```

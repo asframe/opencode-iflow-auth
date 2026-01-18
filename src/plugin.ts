@@ -89,10 +89,21 @@ export const createIFlowPlugin =
                 if (!acc) {
                   const minWait = am.getMinWaitTime()
                   if (minWait > 0) {
+                    showToast(
+                      `All accounts rate-limited. Waiting ${Math.ceil(minWait / 1000)}s...`,
+                      'warning'
+                    )
                     await sleep(Math.min(minWait, 5000))
                     continue
                   }
                   throw new Error('No healthy accounts available')
+                }
+
+                if (count > 1 && am.shouldShowToast()) {
+                  showToast(
+                    `Using ${acc.email} (${am.getAccounts().indexOf(acc) + 1}/${count})`,
+                    'info'
+                  )
                 }
 
                 if (
