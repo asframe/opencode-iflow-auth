@@ -123,11 +123,24 @@ export const createIFlowPlugin =
 
                 const apiTimestamp = config.enable_log_api_request ? logger.getTimestamp() : null
 
+                const incomingHeaders = init?.headers || {}
+                const cleanedHeaders: Record<string, string> = {}
+                for (const [key, value] of Object.entries(incomingHeaders)) {
+                  const lowerKey = key.toLowerCase()
+                  if (
+                    lowerKey !== 'authorization' &&
+                    lowerKey !== 'user-agent' &&
+                    lowerKey !== 'content-type'
+                  ) {
+                    cleanedHeaders[key] = value as string
+                  }
+                }
+
                 const headers = {
                   Authorization: `Bearer ${acc.apiKey}`,
                   'User-Agent': IFLOW_CONSTANTS.USER_AGENT,
                   'Content-Type': 'application/json',
-                  ...init?.headers
+                  ...cleanedHeaders
                 }
 
                 if (apiTimestamp) {
