@@ -206,11 +206,11 @@ export const createIFlowPlugin =
                       IFlowOAuthTokenResult | { type: 'failed'; error: string }
                     > => {
                       try {
-                        const authData = await authorizeIFlowOAuth()
-                        const { url, waitForAuth } = await startOAuthServer(
+                        const authData = await authorizeIFlowOAuth(config.auth_server_port_start)
+                        const { url, redirectUri, waitForAuth } = await startOAuthServer(
                           authData.authUrl,
                           authData.state,
-                          authData.codeVerifier,
+                          authData.redirectUri,
                           config.auth_server_port_start,
                           config.auth_server_port_range
                         )
@@ -312,11 +312,11 @@ export const createIFlowPlugin =
                 }
 
                 try {
-                  const authData = await authorizeIFlowOAuth()
-                  const { url, waitForAuth } = await startOAuthServer(
+                  const authData = await authorizeIFlowOAuth(config.auth_server_port_start)
+                  const { url, redirectUri, waitForAuth } = await startOAuthServer(
                     authData.authUrl,
                     authData.state,
-                    authData.codeVerifier,
+                    authData.redirectUri,
                     config.auth_server_port_start,
                     config.auth_server_port_range
                   )

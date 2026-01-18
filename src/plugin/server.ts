@@ -1,22 +1,23 @@
 import { createServer, IncomingMessage, ServerResponse } from 'node:http'
-import { IFLOW_CONSTANTS } from '../constants'
 import type { IFlowOAuthTokenResult } from '../iflow/oauth'
 import { exchangeOAuthCode } from '../iflow/oauth'
 
 export interface OAuthServerResult {
   url: string
+  redirectUri: string
   waitForAuth: () => Promise<IFlowOAuthTokenResult>
 }
 
 export async function startOAuthServer(
   authUrl: string,
   state: string,
-  codeVerifier: string,
-  portStart: number = IFLOW_CONSTANTS.CALLBACK_PORT_START,
-  portRange: number = IFLOW_CONSTANTS.CALLBACK_PORT_RANGE
+  redirectUri: string,
+  portStart: number,
+  portRange: number
 ): Promise<OAuthServerResult> {
   let resolveAuth: (result: IFlowOAuthTokenResult) => void
   let rejectAuth: (error: Error) => void
+  let timeoutHandle: NodeJS.Timeout
 
   const authPromise = new Promise<IFlowOAuthTokenResult>((resolve, reject) => {
     resolveAuth = resolve
@@ -29,45 +30,61 @@ export async function startOAuthServer(
   const handler = async (req: IncomingMessage, res: ServerResponse) => {
     const url = new URL(req.url || '', `http://localhost:${actualPort}`)
 
-    if (url.pathname === '/callback') {
+    if (url.pathname === '/oauth2callback') {
       const code = url.searchParams.get('code')
       const returnedState = url.searchParams.get('state')
+      const error = url.searchParams.get('error')
+
+      if (error) {
+        res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' })
+        res.end(`<html><body><h1>Authorization failed: ${error}</h1></body></html>`)
+        clearTimeout(timeoutHandle)
+        rejectAuth(new Error(`Authorization failed: ${error}`))
+        setTimeout(() => server?.close(), 1000)
+        return
+      }
 
       if (!code || !returnedState) {
-        res.writeHead(400, { 'Content-Type': 'text/html' })
+        res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' })
         res.end('<html><body><h1>Error: Missing code or state</h1></body></html>')
+        clearTimeout(timeoutHandle)
         rejectAuth(new Error('Missing code or state in callback'))
-        server?.close()
+        setTimeout(() => server?.close(), 1000)
         return
       }
 
       if (returnedState !== state) {
-        res.writeHead(400, { 'Content-Type': 'text/html' })
+        res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' })
         res.end('<html><body><h1>Error: State mismatch</h1></body></html>')
+        clearTimeout(timeoutHandle)
         rejectAuth(new Error('State mismatch'))
-        server?.close()
+        setTimeout(() => server?.close(), 1000)
         return
       }
 
       try {
-        const result = await exchangeOAuthCode(code, codeVerifier)
+        const result = await exchangeOAuthCode(code, redirectUri)
 
-        res.writeHead(200, { 'Content-Type': 'text/html' })
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
         res.end(
-          '<html><body><h1>Authentication successful!</h1><p>You can close this window.</p></body></html>'
+          `<html><body><h1>Authentication successful!</h1><p>Account: ${result.email}</p><p>You can close this window.</p></body></html>`
         )
 
-        resolveAuth(result)
-        server?.close()
+        clearTimeout(timeoutHandle)
+        setTimeout(() => {
+          resolveAuth(result)
+          setTimeout(() => server?.close(), 1000)
+        }, 100)
       } catch (error: any) {
-        res.writeHead(500, { 'Content-Type': 'text/html' })
+        res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' })
         res.end(`<html><body><h1>Error: ${error.message}</h1></body></html>`)
+        clearTimeout(timeoutHandle)
         rejectAuth(error)
-        server?.close()
+        setTimeout(() => server?.close(), 1000)
       }
     } else {
-      res.writeHead(404, { 'Content-Type': 'text/html' })
-      res.end('<html><body><h1>Not Found</h1></body></html>')
+      res.writeHead(204)
+      res.end()
     }
   }
 
@@ -75,7 +92,7 @@ export async function startOAuthServer(
     try {
       server = createServer(handler)
       await new Promise<void>((resolve, reject) => {
-        server!.listen(port, () => {
+        server!.listen(port, '0.0.0.0', () => {
           actualPort = port
           resolve()
         })
@@ -93,8 +110,16 @@ export async function startOAuthServer(
     throw new Error('Failed to start OAuth callback server')
   }
 
+  timeoutHandle = setTimeout(() => {
+    if (server?.listening) {
+      rejectAuth(new Error('OAuth timeout: No response after 10 minutes'))
+      server.close()
+    }
+  }, 10 * 60 * 1000)
+
   return {
     url: authUrl,
+    redirectUri,
     waitForAuth: () => authPromise
   }
 }

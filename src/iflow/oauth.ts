@@ -1,10 +1,10 @@
 import { IFLOW_CONSTANTS } from '../constants'
-import { randomBytes, createHash } from 'node:crypto'
+import { randomBytes } from 'node:crypto'
 
 export interface IFlowOAuthAuthorization {
   authUrl: string
   state: string
-  codeVerifier: string
+  redirectUri: string
 }
 
 export interface IFlowOAuthTokenResult {
@@ -20,44 +20,37 @@ function base64URLEncode(buffer: Buffer): string {
   return buffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
 }
 
-function generateCodeVerifier(): string {
-  return base64URLEncode(randomBytes(32))
+function generateState(): string {
+  return base64URLEncode(randomBytes(16))
 }
 
-function generateCodeChallenge(verifier: string): string {
-  return base64URLEncode(createHash('sha256').update(verifier).digest())
-}
-
-export async function authorizeIFlowOAuth(): Promise<IFlowOAuthAuthorization> {
-  const state = base64URLEncode(randomBytes(16))
-  const codeVerifier = generateCodeVerifier()
-  const codeChallenge = generateCodeChallenge(codeVerifier)
+export async function authorizeIFlowOAuth(port: number): Promise<IFlowOAuthAuthorization> {
+  const state = generateState()
+  const redirectUri = `http://localhost:${port}/oauth2callback`
 
   const params = new URLSearchParams({
-    client_id: IFLOW_CONSTANTS.CLIENT_ID,
-    response_type: 'code',
-    redirect_uri: `http://localhost:${IFLOW_CONSTANTS.CALLBACK_PORT_START}/callback`,
+    loginMethod: 'phone',
+    type: 'phone',
+    redirect: redirectUri,
     state,
-    code_challenge: codeChallenge,
-    code_challenge_method: 'S256'
+    client_id: IFLOW_CONSTANTS.CLIENT_ID
   })
 
   const authUrl = `${IFLOW_CONSTANTS.OAUTH_AUTHORIZE_URL}?${params.toString()}`
 
-  return { authUrl, state, codeVerifier }
+  return { authUrl, state, redirectUri }
 }
 
 export async function exchangeOAuthCode(
   code: string,
-  codeVerifier: string
+  redirectUri: string
 ): Promise<IFlowOAuthTokenResult> {
   const params = new URLSearchParams({
     grant_type: 'authorization_code',
     code,
-    redirect_uri: `http://localhost:${IFLOW_CONSTANTS.CALLBACK_PORT_START}/callback`,
+    redirect_uri: redirectUri,
     client_id: IFLOW_CONSTANTS.CLIENT_ID,
-    client_secret: IFLOW_CONSTANTS.CLIENT_SECRET,
-    code_verifier: codeVerifier
+    client_secret: IFLOW_CONSTANTS.CLIENT_SECRET
   })
 
   const basicAuth = Buffer.from(
@@ -143,12 +136,14 @@ export async function refreshOAuthToken(refreshToken: string): Promise<IFlowOAut
 export async function fetchUserInfo(
   accessToken: string
 ): Promise<{ apiKey: string; email: string }> {
-  const response = await fetch(IFLOW_CONSTANTS.USER_INFO_URL, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      Accept: 'application/json'
+  const response = await fetch(
+    `${IFLOW_CONSTANTS.USER_INFO_URL}?accessToken=${encodeURIComponent(accessToken)}`,
+    {
+      headers: {
+        Accept: 'application/json'
+      }
     }
-  })
+  )
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '')
@@ -157,8 +152,18 @@ export async function fetchUserInfo(
 
   const data = await response.json()
 
+  if (!data.success || !data.data) {
+    throw new Error('User info request not successful')
+  }
+
+  if (!data.data.apiKey) {
+    throw new Error('Missing apiKey in user info response')
+  }
+
+  const email = data.data.email || data.data.phone || 'oauth-user'
+
   return {
-    apiKey: data.apiKey || data.api_key || '',
-    email: data.email || data.username || 'oauth-user'
+    apiKey: data.data.apiKey,
+    email
   }
 }
