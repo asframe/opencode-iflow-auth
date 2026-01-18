@@ -1,0 +1,61 @@
+{
+  "name": "@zhafron/opencode-iflow-auth",
+  "version": "1.0.0",
+  "description": "OpenCode plugin for iFlow providing access to Claude, GPT, Gemini, DeepSeek, and Qwen models",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "format": "prettier --write --no-config --no-semi --single-quote --trailing-comma none --print-width 100 'src/**/*.ts'",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "opencode",
+    "plugin",
+    "iflow",
+    "claude",
+    "gpt",
+    "gemini",
+    "deepseek",
+    "qwen",
+    "ai",
+    "auth",
+    "oauth",
+    "apikey"
+  ],
+  "author": "tickernelz",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tickernelz/opencode-iflow-auth.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^0.15.30",
+    "proper-lockfile": "^4.1.2",
+    "tiktoken": "^1.0.17",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/proper-lockfile": "^4.1.4",
+    "prettier": "^3.4.2",
+    "prettier-plugin-organize-imports": "^4.1.0",
+    "typescript": "^5.7.3"
+  },
+  "opencode": {
+    "type": "plugin",
+    "hooks": [
+      "auth",
+      "event"
+    ]
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md"
+  ]
+}

@@ -1,0 +1,76 @@
+export type IFlowAuthMethod = 'oauth' | 'apikey'
+
+export interface IFlowAuthDetails {
+  refresh: string
+  access: string
+  expires: number
+  authMethod: IFlowAuthMethod
+  apiKey: string
+  email?: string
+}
+
+export interface RefreshParts {
+  refreshToken?: string
+  authMethod: IFlowAuthMethod
+}
+
+export interface ManagedAccount {
+  id: string
+  email: string
+  authMethod: IFlowAuthMethod
+  refreshToken?: string
+  accessToken?: string
+  expiresAt?: number
+  apiKey: string
+  rateLimitResetTime: number
+  isHealthy: boolean
+  unhealthyReason?: string
+  recoveryTime?: number
+  usedCount?: number
+  limitCount?: number
+  lastUsed?: number
+}
+
+export interface AccountMetadata {
+  id: string
+  email: string
+  authMethod: IFlowAuthMethod
+  refreshToken?: string
+  accessToken?: string
+  expiresAt?: number
+  apiKey: string
+  rateLimitResetTime: number
+  isHealthy: boolean
+  unhealthyReason?: string
+  recoveryTime?: number
+}
+
+export interface AccountStorage {
+  version: 1
+  accounts: AccountMetadata[]
+  activeIndex: number
+}
+
+export interface UsageMetadata {
+  usedCount: number
+  limitCount: number
+  lastSync: number
+}
+
+export interface UsageStorage {
+  version: 1
+  usage: Record<string, UsageMetadata>
+}
+
+export type AccountSelectionStrategy = 'sticky' | 'round-robin' | 'lowest-usage'
+
+export interface IFlowPluginConfig {
+  default_auth_method: IFlowAuthMethod
+  account_selection_strategy: AccountSelectionStrategy
+  auth_server_port_start: number
+  auth_server_port_range: number
+  max_request_iterations: number
+  request_timeout_ms: number
+  enable_usage_tracking: boolean
+  enable_debug_logging: boolean
+}
