@@ -1,7 +1,7 @@
 {
   "name": "@zhafron/opencode-iflow-auth",
-  "version": "1.0.1",
-  "description": "OpenCode plugin for iFlow providing access to Claude, GPT, Gemini, DeepSeek, and Qwen models",
+  "version": "2.0.0",
+  "description": "OpenCode plugin for iFlow providing access to GLM-5, Qwen, DeepSeek, Kimi, and more AI models",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,11 +14,10 @@
     "opencode",
     "plugin",
     "iflow",
-    "claude",
-    "gpt",
-    "gemini",
-    "deepseek",
+    "glm-5",
     "qwen",
+    "deepseek",
+    "kimi",
     "ai",
     "auth",
     "oauth",
@@ -34,7 +33,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@opencode-ai/plugin": "^0.15.30",
+    "@opencode-ai/plugin": "^1.2.6",
     "proper-lockfile": "^4.1.2",
     "tiktoken": "^1.0.17",
     "zod": "^3.24.0"
@@ -50,7 +49,8 @@
     "type": "plugin",
     "hooks": [
       "auth",
-      "event"
+      "event",
+      "chat.headers"
     ]
   },
   "files": [

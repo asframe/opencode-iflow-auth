@@ -7,6 +7,7 @@ export interface IFlowAuthDetails {
   authMethod: IFlowAuthMethod
   apiKey: string
   email?: string
+  accountId?: string
 }
 
 export interface RefreshParts {
@@ -27,6 +28,7 @@ export interface ManagedAccount {
   unhealthyReason?: string
   recoveryTime?: number
   lastUsed?: number
+  accountId?: string
 }
 
 export interface AccountMetadata {
@@ -41,6 +43,7 @@ export interface AccountMetadata {
   isHealthy: boolean
   unhealthyReason?: string
   recoveryTime?: number
+  accountId?: string
 }
 
 export interface AccountStorage {

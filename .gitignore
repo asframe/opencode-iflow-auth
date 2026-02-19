@@ -10,3 +10,4 @@ coverage/
 test-*.js
 test-*.mjs
 *.tmp
+.trae
