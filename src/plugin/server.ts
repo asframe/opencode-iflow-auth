@@ -1,6 +1,6 @@
 import { createServer, IncomingMessage, ServerResponse } from 'node:http'
-import type { IFlowOAuthTokenResult } from '../iflow/oauth'
-import { exchangeOAuthCode } from '../iflow/oauth'
+import type { IFlowOAuthTokenResult } from '../iflow/oauth.js'
+import { exchangeOAuthCode } from '../iflow/oauth.js'
 
 export interface OAuthServerResult {
   url: string

@@ -1,4 +1,4 @@
-import { IFLOW_CONSTANTS } from '../constants'
+import { IFLOW_CONSTANTS } from '../constants.js'
 
 export interface IFlowApiKeyResult {
   apiKey: string

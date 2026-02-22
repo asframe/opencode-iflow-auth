@@ -1,12 +1,23 @@
 import { randomBytes } from 'node:crypto'
-import { loadAccounts, saveAccounts } from './storage'
+import { join, dirname } from 'node:path'
+import { homedir } from 'node:os'
+import { promises as fs } from 'node:fs'
+import { loadAccounts, saveAccounts } from './storage.js'
 import type {
   ManagedAccount,
   AccountMetadata,
   AccountSelectionStrategy,
   IFlowAuthDetails,
   RefreshParts
-} from './types'
+} from './types.js'
+
+const DEBUG = process.env.IFLOW_AUTH_DEBUG === 'true'
+
+function log(...args: any[]) {
+  if (DEBUG) {
+    console.error('[iflow-auth]', ...args)
+  }
+}
 
 export function generateAccountId(): string {
   return randomBytes(16).toString('hex')
@@ -24,6 +35,36 @@ export function decodeRefreshToken(encoded: string): RefreshParts {
   }
 }
 
+function getOpenCodeDataDir(): string {
+  const platform = process.platform
+  if (platform === 'win32') {
+    return join(homedir(), '.local', 'share')
+  }
+  return process.env.XDG_DATA_HOME || join(homedir(), '.local', 'share')
+}
+
+async function readOpenCodeAuth(): Promise<{ key: string } | null> {
+  try {
+    const dataDir = getOpenCodeDataDir()
+    const authPath = join(dataDir, 'opencode', 'auth.json')
+    log('Reading auth from:', authPath)
+    const content = await fs.readFile(authPath, 'utf-8')
+    log('Auth content:', content.substring(0, 200))
+    const auth = JSON.parse(content)
+    log('Parsed auth keys:', Object.keys(auth))
+    log('iflow entry:', auth.iflow)
+    if (auth.iflow && auth.iflow.type === 'api' && auth.iflow.key) {
+      log('Found iflow API key')
+      return { key: auth.iflow.key }
+    }
+    log('No iflow API key found')
+    return null
+  } catch (e: any) {
+    log('Error reading auth:', e.message)
+    return null
+  }
+}
+
 export class AccountManager {
   private accounts: ManagedAccount[]
   private cursor: number
@@ -37,7 +78,29 @@ export class AccountManager {
   }
 
   static async loadFromDisk(strategy?: AccountSelectionStrategy): Promise<AccountManager> {
+    log('loadFromDisk called')
     const s = await loadAccounts()
+    log('Loaded accounts count:', s.accounts.length)
+    
+    if (s.accounts.length === 0) {
+      log('No accounts, trying to read OpenCode auth')
+      const openCodeAuth = await readOpenCodeAuth()
+      log('OpenCode auth result:', openCodeAuth ? 'found' : 'not found')
+      if (openCodeAuth) {
+        const account: ManagedAccount = {
+          id: generateAccountId(),
+          email: 'iflow-user',
+          authMethod: 'apikey',
+          apiKey: openCodeAuth.key,
+          rateLimitResetTime: 0,
+          isHealthy: true,
+        }
+        s.accounts.push(account)
+        log('Added account from OpenCode auth')
+      }
+    }
+    
+    log('Final accounts count:', s.accounts.length)
     return new AccountManager(s.accounts, strategy || 'sticky')
   }
 

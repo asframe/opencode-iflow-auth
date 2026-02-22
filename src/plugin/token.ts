@@ -1,6 +1,6 @@
-import type { IFlowAuthDetails } from './types'
-import { refreshOAuthToken } from '../iflow/oauth'
-import { decodeRefreshToken, encodeRefreshToken } from './accounts'
+import type { IFlowAuthDetails } from './types.js'
+import { refreshOAuthToken } from '../iflow/oauth.js'
+import { decodeRefreshToken, encodeRefreshToken } from './accounts.js'
 
 export function accessTokenExpired(expiresAt: number): boolean {
   return Date.now() >= expiresAt - 60000

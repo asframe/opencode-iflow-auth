@@ -1,13 +1,76 @@
+# Dependencies
 node_modules/
+.pnpm-store/
+.pnpm-debug.log
+
+# Build output
 dist/
+build/
+*.tsbuildinfo
+
+# Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log
+
+# OS files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Environment
 .env
 .env.local
-*.tsbuildinfo
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Testing
 coverage/
 .nyc_output/
 test-*.js
 test-*.mjs
+*.lcov
+
+# Temporary files
 *.tmp
-.trae
+*.temp
+.cache/
+
+# npm
+.npmrc
+.npm/
+*.tgz
+
+# TypeScript
+*.tsbuildinfo
+
+# Trae IDE
+.trae/
+
+# OpenCode config (may contain sensitive data)
+opencode.json
+oh-my-opencode.json
+
+# Scripts
+*.ps1
+*.sh
+
+# Misc
+*.bak
+*.backup
+*.orig

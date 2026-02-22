@@ -1,4 +1,4 @@
-import { IFLOW_CONSTANTS } from '../constants'
+import { IFLOW_CONSTANTS } from '../constants.js'
 import { randomBytes } from 'node:crypto'
 
 export interface IFlowOAuthAuthorization {

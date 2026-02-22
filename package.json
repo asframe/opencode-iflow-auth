@@ -1,14 +1,15 @@
 {
-  "name": "@zhafron/opencode-iflow-auth",
-  "version": "2.0.0",
-  "description": "OpenCode plugin for iFlow providing access to GLM-5, Qwen, DeepSeek, Kimi, and more AI models",
+  "name": "@asframe/opencode-iflow-auth",
+  "version": "1.0.6",
+  "description": "OpenCode plugin for iFlow.cn - Access Qwen, DeepSeek, Kimi, GLM-5 models with OAuth 2.0, API Key, and CLI Proxy support",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "format": "prettier --write --no-config --no-semi --single-quote --trailing-comma none --print-width 100 'src/**/*.ts'",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "opencode",
@@ -21,13 +22,14 @@
     "ai",
     "auth",
     "oauth",
-    "apikey"
+    "apikey",
+    "cli-proxy"
   ],
-  "author": "tickernelz",
+  "author": "asframe",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tickernelz/opencode-iflow-auth.git"
+    "url": "git+https://github.com/asframe/opencode-iflow-auth.git"
   },
   "publishConfig": {
     "access": "public"

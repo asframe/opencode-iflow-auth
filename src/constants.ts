@@ -18,16 +18,50 @@ export const IFLOW_CONSTANTS = {
   CALLBACK_PORT_RANGE: 10
 }
 
-export const THINKING_MODELS = ['glm-4.6', 'glm-5', 'glm-5.1', 'glm-5.2', 'qwen3-235b-a22b-thinking-2507', 'deepseek-r1']
+export const THINKING_MODEL_PATTERNS = [
+  /^glm-5/,
+  /^glm-4\.7/,
+  /^glm-4\.6/,
+  /^glm-4/,
+  /deepseek/,
+  /thinking/,
+  /reasoning/,
+  /^kimi-k2\.5/,
+  /^o1-/
+]
 
 export function isThinkingModel(model: string): boolean {
-  return THINKING_MODELS.some((m) => model.startsWith(m))
+  return THINKING_MODEL_PATTERNS.some(pattern => pattern.test(model))
 }
 
 export function applyThinkingConfig(body: any, model: string): any {
   const thinkingBudget = body.providerOptions?.thinkingConfig?.thinkingBudget
+  const isThinkingEnabled = body.providerOptions?.thinkingConfig?.enabled !== false
 
-  if (model.startsWith('glm-4') || model.startsWith('glm-5')) {
+  if (model.startsWith('glm-5')) {
+    const result: any = {
+      ...body,
+      temperature: 1,
+      top_p: 0.95,
+    }
+    
+    if (isThinkingEnabled) {
+      result.chat_template_kwargs = { enable_thinking: true }
+      result.enable_thinking = true
+      result.thinking = { type: 'enabled' }
+      if (thinkingBudget) {
+        result.thinking_budget = thinkingBudget
+      }
+    } else {
+      result.chat_template_kwargs = { enable_thinking: false }
+      result.enable_thinking = false
+      result.thinking = { type: 'disabled' }
+    }
+    
+    return result
+  }
+
+  if (model.startsWith('glm-4')) {
     const result: any = {
       ...body,
       chat_template_kwargs: {
@@ -76,55 +110,12 @@ export const IFLOW_MODELS: IFlowModelConfig[] = [
     outputModalities: ['text'],
     reasoning: true,
     toolcall: true,
-    family: 'glm-5',
+    family: 'glm',
     variants: {
       low: { thinkingConfig: { thinkingBudget: 1024 } },
       medium: { thinkingConfig: { thinkingBudget: 8192 } },
       max: { thinkingConfig: { thinkingBudget: 32768 } }
     }
-  },
-  {
-    id: 'glm-5.1',
-    name: 'GLM-5.1',
-    context: 512000,
-    output: 128000,
-    inputModalities: ['text', 'image'],
-    outputModalities: ['text'],
-    reasoning: true,
-    toolcall: true,
-    family: 'glm-5',
-    variants: {
-      low: { thinkingConfig: { thinkingBudget: 1024 } },
-      medium: { thinkingConfig: { thinkingBudget: 8192 } },
-      max: { thinkingConfig: { thinkingBudget: 32768 } }
-    }
-  },
-  {
-    id: 'glm-5.2',
-    name: 'GLM-5.2',
-    context: 512000,
-    output: 128000,
-    inputModalities: ['text', 'image'],
-    outputModalities: ['text'],
-    reasoning: true,
-    toolcall: true,
-    family: 'glm-5',
-    variants: {
-      low: { thinkingConfig: { thinkingBudget: 1024 } },
-      medium: { thinkingConfig: { thinkingBudget: 8192 } },
-      max: { thinkingConfig: { thinkingBudget: 32768 } }
-    }
-  },
-  {
-    id: 'glm-5-coder',
-    name: 'GLM-5 Coder',
-    context: 256000,
-    output: 64000,
-    inputModalities: ['text'],
-    outputModalities: ['text'],
-    reasoning: true,
-    toolcall: true,
-    family: 'glm-5-coder'
   },
   {
     id: 'glm-4.6',
@@ -135,7 +126,7 @@ export const IFLOW_MODELS: IFlowModelConfig[] = [
     outputModalities: ['text'],
     reasoning: true,
     toolcall: true,
-    family: 'glm-4',
+    family: 'glm',
     variants: {
       low: { thinkingConfig: { thinkingBudget: 1024 } },
       medium: { thinkingConfig: { thinkingBudget: 8192 } },
@@ -145,6 +136,16 @@ export const IFLOW_MODELS: IFlowModelConfig[] = [
   {
     id: 'qwen3-max',
     name: 'Qwen3 Max',
+    context: 256000,
+    output: 32000,
+    inputModalities: ['text'],
+    outputModalities: ['text'],
+    toolcall: true,
+    family: 'qwen3'
+  },
+  {
+    id: 'qwen3-max-preview',
+    name: 'Qwen3 Max Preview',
     context: 256000,
     output: 32000,
     inputModalities: ['text'],
@@ -182,6 +183,16 @@ export const IFLOW_MODELS: IFlowModelConfig[] = [
     family: 'qwen3'
   },
   {
+    id: 'qwen3-235b',
+    name: 'Qwen3 235B',
+    context: 256000,
+    output: 64000,
+    inputModalities: ['text'],
+    outputModalities: ['text'],
+    toolcall: true,
+    family: 'qwen3'
+  },
+  {
     id: 'qwen3-235b-a22b-thinking-2507',
     name: 'Qwen3 235B Thinking',
     context: 256000,
@@ -196,6 +207,16 @@ export const IFLOW_MODELS: IFlowModelConfig[] = [
       medium: { thinkingConfig: { thinkingBudget: 8192 } },
       max: { thinkingConfig: { thinkingBudget: 32768 } }
     }
+  },
+  {
+    id: 'qwen3-235b-a22b-instruct',
+    name: 'Qwen3 235B Instruct',
+    context: 256000,
+    output: 64000,
+    inputModalities: ['text'],
+    outputModalities: ['text'],
+    toolcall: true,
+    family: 'qwen3'
   },
   {
     id: 'kimi-k2',
@@ -266,12 +287,13 @@ export const IFLOW_MODELS: IFlowModelConfig[] = [
 
 export function registerIFlowModels(provider: any): void {
   for (const modelConfig of IFLOW_MODELS) {
+    const actualApiId = modelConfig.id
     if (!provider.models[modelConfig.id]) {
       provider.models[modelConfig.id] = {
         id: modelConfig.id,
         providerID: 'iflow',
         api: {
-          id: modelConfig.id,
+          id: actualApiId,
           url: IFLOW_CONSTANTS.BASE_URL,
           npm: '@ai-sdk/openai-compatible'
         },

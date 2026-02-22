@@ -3,8 +3,8 @@ import { dirname, join } from 'node:path'
 import { randomBytes } from 'node:crypto'
 import { homedir } from 'node:os'
 import lockfile from 'proper-lockfile'
-import type { AccountStorage } from './types'
-import * as logger from './logger'
+import type { AccountStorage } from './types.js'
+import * as logger from './logger.js'
 
 const LOCK_OPTIONS = {
   stale: 10000,
