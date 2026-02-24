@@ -10,7 +10,7 @@ import {
 } from './schema.js'
 import * as logger from '../logger.js'
 
-function getConfigDir(): string {
+function getLegacyConfigDir(): string {
   const platform = process.platform
   if (platform === 'win32') {
     return join(process.env.APPDATA || join(homedir(), 'AppData', 'Roaming'), 'opencode')
@@ -19,8 +19,36 @@ function getConfigDir(): string {
   return join(xdgConfig, 'opencode')
 }
 
+function getPreferredConfigDir(): string {
+  const platform = process.platform
+  if (platform === 'win32') {
+    const xdgConfig = process.env.XDG_CONFIG_HOME || join(homedir(), '.config')
+    return join(xdgConfig, 'opencode')
+  }
+  const xdgConfig = process.env.XDG_CONFIG_HOME || join(homedir(), '.config')
+  return join(xdgConfig, 'opencode')
+}
+
+function getConfigPaths(): { preferred: string; legacy: string } {
+  return {
+    preferred: join(getPreferredConfigDir(), 'iflow.json'),
+    legacy: join(getLegacyConfigDir(), 'iflow.json')
+  }
+}
+
+function findExistingConfigPath(): string {
+  const { preferred, legacy } = getConfigPaths()
+  if (existsSync(preferred)) {
+    return preferred
+  }
+  if (existsSync(legacy)) {
+    return legacy
+  }
+  return preferred
+}
+
 export function getConfigPath(): string {
-  return join(getConfigDir(), 'iflow.json')
+  return findExistingConfigPath()
 }
 
 function ensureUserConfigTemplate(): void {

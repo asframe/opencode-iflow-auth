@@ -53,9 +53,11 @@ async function readOpenCodeAuth(): Promise<{ key: string } | null> {
     const auth = JSON.parse(content)
     log('Parsed auth keys:', Object.keys(auth))
     log('iflow entry:', auth.iflow)
-    if (auth.iflow && auth.iflow.type === 'api' && auth.iflow.key) {
+    log('iflowcn entry:', auth.iflowcn)
+    const iflowAuth = auth.iflow || auth.iflowcn
+    if (iflowAuth && iflowAuth.type === 'api' && iflowAuth.key) {
       log('Found iflow API key')
-      return { key: auth.iflow.key }
+      return { key: iflowAuth.key }
     }
     log('No iflow API key found')
     return null
