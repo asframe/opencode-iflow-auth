@@ -5,6 +5,8 @@
 [![license](https://img.shields.io/npm/l/@asframe/opencode-iflow-auth)](https://www.npmjs.com/package/@asframe/opencode-iflow-auth)
 [![GitHub](https://img.shields.io/badge/GitHub-asframe%2Fopencode--iflow--auth-blue)](https://github.com/asframe/opencode-iflow-auth)
 
+**[中文文档](README_CN.md)** | **English**
+
 OpenCode plugin for iFlow.cn providing access to Qwen, DeepSeek, Kimi, GLM, and iFlow ROME models with dual authentication and CLI Proxy support.
 
 ## Features
@@ -359,6 +361,11 @@ No, this is an independent implementation and is not affiliated with, endorsed b
 4. Generate a new API key
 
 ## Changelog
+
+### v1.0.7
+- Fixed CLI detection to avoid triggering interactive login
+- Check config files instead of running `iflow --version`
+- Disabled auto-login (iflow CLI is now interactive)
 
 ### v1.0.6
 - Thinking model patterns aligned with iflow CLI

@@ -13,7 +13,7 @@ const CLI_REQUIRED_MODELS = ['glm-5', 'glm-5-free', 'glm-5-thinking']
 
 const DEBUG = process.env.IFLOW_PROXY_DEBUG === 'true'
 const AUTO_INSTALL_CLI = process.env.IFLOW_AUTO_INSTALL_CLI !== 'false'
-const AUTO_LOGIN = process.env.IFLOW_AUTO_LOGIN !== 'false'
+const AUTO_LOGIN = false
 
 function log(...args: any[]) {
   if (DEBUG) {
@@ -85,14 +85,20 @@ function requiresCLI(model: string): boolean {
 
 function checkIFlowCLI(): { installed: boolean; version?: string; error?: string } {
   try {
-    const result = execSync('iflow --version', { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] })
-    const version = result.trim()
-    log('iflow CLI version:', version)
-    return { installed: true, version }
+    const configPath = getIFlowConfigPath()
+    const credsPath = getIFlowOAuthCredsPath()
+    
+    if (existsSync(configPath) || existsSync(credsPath)) {
+      log('iflow CLI config found at:', configPath)
+      return { installed: true, version: 'installed' }
+    }
+    
+    execSync('where iflow 2>nul || which iflow 2>/dev/null', { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] })
+    log('iflow CLI executable found')
+    return { installed: true, version: 'installed' }
   } catch (error: any) {
-    const errorMsg = error.message || 'Unknown error'
-    log('iflow CLI check failed:', errorMsg)
-    return { installed: false, error: errorMsg }
+    log('iflow CLI check failed:', error.message)
+    return { installed: false, error: 'iflow CLI not found' }
   }
 }
 

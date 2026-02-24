@@ -5,6 +5,8 @@
 [![license](https://img.shields.io/npm/l/@asframe/opencode-iflow-auth)](https://www.npmjs.com/package/@asframe/opencode-iflow-auth)
 [![GitHub](https://img.shields.io/badge/GitHub-asframe%2Fopencode--iflow--auth-blue)](https://github.com/asframe/opencode-iflow-auth)
 
+**中文文档** | **[English](README.md)**
+
 OpenCode 插件，用于 iFlow.cn，支持 Qwen、DeepSeek、Kimi、GLM 和 iFlow ROME 模型，提供双重认证和 CLI 代理支持。
 
 ## 功能特性
@@ -359,6 +361,11 @@ GLM-5 需要特殊的认证方式，只有通过 iflow CLI 才能使用。CLI �
 4. 生成新的 API key
 
 ## 更新日志
+
+### v1.0.7
+- 修复 CLI 检测逻辑，避免触发交互式登录
+- 改为检查配置文件而非运行 `iflow --version`
+- 禁用自动登录（iflow CLI 现在是交互式的）
 
 ### v1.0.6
 - Thinking 模型配置与 iflow CLI 保持一致
