@@ -4,11 +4,11 @@ import { join } from 'node:path'
 
 const getLogDir = () => {
   const platform = process.platform
-  const xdgConfig = process.env.XDG_CONFIG_HOME || join(homedir(), '.config')
-  const base = platform === 'win32'
-    ? xdgConfig
-    : xdgConfig
-  return join(base, 'opencode', 'iflow-logs')
+  const base =
+    platform === 'win32'
+      ? join(process.env.APPDATA || join(homedir(), 'AppData', 'Roaming'), 'opencode')
+      : join(process.env.XDG_CONFIG_HOME || join(homedir(), '.config'), 'opencode')
+  return join(base, 'iflow-logs')
 }
 
 const writeToFile = (level: string, message: string, ...args: unknown[]) => {

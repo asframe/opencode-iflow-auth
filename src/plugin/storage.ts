@@ -11,7 +11,7 @@ const LOCK_OPTIONS = {
   retries: { retries: 5, minTimeout: 100, maxTimeout: 1000, factor: 2 }
 }
 
-function getLegacyBaseDir(): string {
+function getBaseDir(): string {
   const platform = process.platform
   if (platform === 'win32') {
     return join(process.env.APPDATA || join(homedir(), 'AppData', 'Roaming'), 'opencode')
@@ -20,37 +20,8 @@ function getLegacyBaseDir(): string {
   return join(xdgConfig, 'opencode')
 }
 
-function getPreferredBaseDir(): string {
-  const platform = process.platform
-  if (platform === 'win32') {
-    const xdgConfig = process.env.XDG_CONFIG_HOME || join(homedir(), '.config')
-    return join(xdgConfig, 'opencode')
-  }
-  const xdgConfig = process.env.XDG_CONFIG_HOME || join(homedir(), '.config')
-  return join(xdgConfig, 'opencode')
-}
-
-function getStoragePaths(): { preferred: string; legacy: string } {
-  return {
-    preferred: join(getPreferredBaseDir(), 'iflow-accounts.json'),
-    legacy: join(getLegacyBaseDir(), 'iflow-accounts.json')
-  }
-}
-
-async function findExistingStoragePath(): Promise<string> {
-  const { preferred, legacy } = getStoragePaths()
-  
-  try {
-    await fs.access(preferred)
-    return preferred
-  } catch {}
-  
-  try {
-    await fs.access(legacy)
-    return legacy
-  } catch {}
-  
-  return preferred
+export function getStoragePath(): string {
+  return join(getBaseDir(), 'iflow-accounts.json')
 }
 
 async function withLock<T>(path: string, fn: () => Promise<T>): Promise<T> {
@@ -91,7 +62,7 @@ async function withLock<T>(path: string, fn: () => Promise<T>): Promise<T> {
 }
 
 export async function loadAccounts(): Promise<AccountStorage> {
-  const path = await findExistingStoragePath()
+  const path = getStoragePath()
   return withLock(path, async () => {
     try {
       const content = await fs.readFile(path, 'utf-8')
@@ -107,7 +78,7 @@ export async function loadAccounts(): Promise<AccountStorage> {
 }
 
 export async function saveAccounts(storage: AccountStorage): Promise<void> {
-  const path = await findExistingStoragePath()
+  const path = getStoragePath()
   try {
     await withLock(path, async () => {
       const tmp = `${path}.${randomBytes(6).toString('hex')}.tmp`

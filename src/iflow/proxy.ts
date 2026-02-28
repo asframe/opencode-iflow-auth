@@ -4,12 +4,11 @@ import { randomUUID } from 'crypto'
 import { existsSync, readFileSync } from 'fs'
 import { homedir } from 'os'
 import { join } from 'path'
+import { requiresCLI } from './models.js'
 
 const IFLOW_PROXY_PORT = 19998
 const IFLOW_PROXY_HOST = '127.0.0.1'
 const IFLOW_API_BASE = 'https://apis.iflow.cn'
-
-const CLI_REQUIRED_MODELS = ['glm-5', 'glm-5-free', 'glm-5-thinking']
 
 const DEBUG = process.env.IFLOW_PROXY_DEBUG === 'true'
 const AUTO_INSTALL_CLI = process.env.IFLOW_AUTO_INSTALL_CLI !== 'false'
@@ -77,10 +76,6 @@ interface StreamChunk {
     }
     finish_reason: string | null
   }>
-}
-
-function requiresCLI(model: string): boolean {
-  return CLI_REQUIRED_MODELS.some(m => model.includes(m))
 }
 
 function checkIFlowCLI(): { installed: boolean; version?: string; error?: string } {
@@ -328,6 +323,11 @@ export class IFlowCLIProxy {
   }
 
   private async handleChatCompletions(req: IncomingMessage, res: ServerResponse): Promise<void> {
+    // 提取 Authorization header
+    const authHeader = req.headers['authorization'] || req.headers['Authorization'] || ''
+    const authStr = Array.isArray(authHeader) ? (authHeader[0] || '') : authHeader
+    const apiKey = authStr.replace('Bearer ', '')
+    
     let body = ''
     req.on('data', chunk => {
       body += chunk.toString()
@@ -370,7 +370,7 @@ export class IFlowCLIProxy {
           }
         } else {
           log(`Using direct API for model: ${model}`)
-          await this.handleDirectAPIRequest(request, res, isStream)
+          await this.handleDirectAPIRequest(request, res, isStream, apiKey)
         }
       } catch (error: any) {
         log('Error parsing request:', error)
@@ -380,7 +380,7 @@ export class IFlowCLIProxy {
     })
   }
 
-  private async handleDirectAPIRequest(request: ChatCompletionRequest, res: ServerResponse, isStream: boolean): Promise<void> {
+  private async handleDirectAPIRequest(request: ChatCompletionRequest, res: ServerResponse, isStream: boolean, apiKey: string): Promise<void> {
     try {
       const https = await import('https')
       
@@ -395,7 +395,8 @@ export class IFlowCLIProxy {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(requestBody)
+          'Content-Length': Buffer.byteLength(requestBody),
+          'Authorization': `Bearer ${apiKey}`
         }
       }
 
