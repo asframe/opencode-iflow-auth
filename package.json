@@ -1,7 +1,7 @@
 {
   "name": "@asframe/opencode-iflow-auth",
-  "version": "1.0.7",
-  "description": "OpenCode plugin for iFlow.cn - Access Qwen, DeepSeek, Kimi, GLM-5 models with OAuth 2.0, API Key, and CLI Proxy support",
+  "version": "1.1.0",
+  "description": "OpenCode plugin for iFlow.cn - Access Qwen, DeepSeek, Kimi, GLM-5 models with OAuth 2.0, API Key, and CLI Proxy support - Auto model discovery & smart routing",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

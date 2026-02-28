@@ -1,11 +1,45 @@
 import { createServer, IncomingMessage, ServerResponse } from 'node:http'
 import type { IFlowOAuthTokenResult } from '../iflow/oauth.js'
 import { exchangeOAuthCode } from '../iflow/oauth.js'
+import { isHeadlessEnvironment, promptOAuthCallback } from './headless.js'
 
 export interface OAuthServerResult {
   url: string
   redirectUri: string
   waitForAuth: () => Promise<IFlowOAuthTokenResult>
+}
+
+function parseCallbackInput(input: string): { code: string; state: string } | null {
+  try {
+    if (input.startsWith('http')) {
+      const url = new URL(input)
+      const code = url.searchParams.get('code')
+      const state = url.searchParams.get('state')
+      if (code && state) {
+        return { code, state }
+      }
+    }
+    
+    if (input.includes('code=')) {
+      const codeMatch = input.match(/code=([^&\s]+)/)
+      const stateMatch = input.match(/state=([^&\s]+)/)
+      if (codeMatch && stateMatch && codeMatch[1] && stateMatch[1]) {
+        return { code: codeMatch[1], state: stateMatch[1] }
+      }
+    }
+    
+    const parts = input.split(/\s+/).filter(p => p.length > 0)
+    if (parts.length >= 2 && parts[0] && parts[1]) {
+      return { code: parts[0], state: parts[1] }
+    }
+    if (parts.length === 1 && parts[0] && parts[0].length > 20) {
+      return { code: parts[0], state: '' }
+    }
+    
+    return null
+  } catch {
+    return null
+  }
 }
 
 export async function startOAuthServer(
@@ -85,6 +119,31 @@ export async function startOAuthServer(
     } else {
       res.writeHead(204)
       res.end()
+    }
+  }
+
+  const headless = isHeadlessEnvironment()
+
+  if (headless) {
+    const manualAuth = async () => {
+      const input = await promptOAuthCallback()
+      const parsed = parseCallbackInput(input)
+      
+      if (!parsed || !parsed.code) {
+        throw new Error('Invalid callback input. Please paste the full callback URL or authorization code.')
+      }
+
+      if (parsed.state && parsed.state !== state) {
+        throw new Error('State mismatch. Please try again.')
+      }
+
+      return exchangeOAuthCode(parsed.code, redirectUri)
+    }
+
+    return {
+      url: authUrl,
+      redirectUri,
+      waitForAuth: manualAuth
     }
   }
 
